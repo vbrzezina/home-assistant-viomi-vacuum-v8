@@ -32,12 +32,6 @@ This integration requires the 32-character Xiaomi Miio device token.
 You can retrieve it using [xiaomi-cloud-tokens-extractor](https://github.com/piotrmachowski/xiaomi-cloud-tokens-extractor) by @piotrmachowski.
 You'll need the Xiaomi account credentials associated with the vacuum.
 
-## Configuration
-
-The integration is configured through the Home Assistant UI.
-
-No `configuration.yaml` entry is required.
-
 ## Supported entities
 
 The integration currently provides:
@@ -70,4 +64,4 @@ Support for additional firmware versions, features, and hardware variants is not
 
 ## Credits
 
-Original integration by [@tykarol](https://github.com/tykarol/home-assistant-viomi-vacuum-v8).
+Original integration by [@tykarol](https://github.com/tykarol/home-assistant-viomi-vacuum-v8) and other contributors.
