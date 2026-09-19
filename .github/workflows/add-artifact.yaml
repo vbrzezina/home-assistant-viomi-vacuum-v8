@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Create release.zip
         working-directory: custom_components/viomi_vacuum_v8
@@ -27,7 +27,6 @@ jobs:
       - name: Verify release.zip
         run: |
           unzip -t release.zip
-          echo "Archive contents:"
           unzip -l release.zip
 
       - name: Create GitHub Release
@@ -37,3 +36,4 @@ jobs:
           name: ${{ github.ref_name }}
           generate_release_notes: true
           files: release.zip
+          fail_on_unmatched_files: true
