@@ -135,5 +135,5 @@ class ViomiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             identifiers={(DOMAIN, self.mac_address)},
             name=self.name,
             manufacturer="Viomi",
-            model=self.model or "STYJ02YM",
+            model=self.model or "STYTJ02YM",
         )

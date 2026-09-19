@@ -1,19 +1,73 @@
-# Home Assistant support for Viomi Vacuum V8 (STYJ02YM)
+# Home Assistant support for Viomi Vacuum V8 (STYTJ02YM) / Xiaomi Mi Robot Vacuum-Mop P
 
-This is for Viomi Vacuum V8 (STYJ02YM) (apparently EU version) with 3.5.3_0017 firmware.
+Home Assistant custom integration for the **Viomi Vacuum V8 (STYTJ02YM)**, also sold as the **Xiaomi Mi Robot Vacuum-Mop P**.
 
-_Original code by [@tykarol](https://github.com/tykarol/home-assistant-viomi-vacuum-v8)._
+Tested with firmware **3.5.3_0017**. Requires Home Assistant **2026.8.0** or newer
 
-## Install and usage
-- Install it with [HACS](https://hacs.xyz/)
-- Add the configuration to `configuration.yaml`, example:
+> ⚠️ This integration is currently in beta. Other firmware versions and hardware variants may work, but are not currently verified.
 
-```yaml
-vacuum:
-  - platform: viomi_vacuum_v8
-    host: 192.168.0.105
-    token: !secret viomi_vacuum_v8_token
-    name: 'Viomi Vacuum V8'
-```
+_Original code by [@tykarol](https://github.com/tykarol/home-assistant-viomi-vacuum-v8) and other contributors._
 
-Services described in the `services.yaml`.
+## Requirements
+
+- Home Assistant **2026.8.0 or newer**
+- Viomi Vacuum V8 (STYTJ02YM)
+- Firmware **3.5.3_0017** (tested)
+
+## Installation
+
+### HACS
+
+1. Open **HACS → Integrations**.
+2. Add this repository in custom repositories
+3. Install the integration.
+4. Restart Home Assistant.
+5. Go to **Settings → Devices & services → Add Integration**.
+6. Search for **Viomi Vacuum V8**.
+7. Enter the vacuum's IP address and token.
+
+## Getting your token
+
+This integration requires the 32-character Xiaomi Miio device token.
+You can retrieve it using xiaomi-cloud-tokens-extractor by [@piotrmachowski](https://github.com/piotrmachowski/xiaomi-cloud-tokens-extractor).
+You'll need the Xiaomi account credentials associated with the vacuum.
+
+## Configuration
+
+The integration is configured through the Home Assistant UI.
+
+No `configuration.yaml` entry is required.
+
+## Supported entities
+
+The integration currently provides:
+
+- Vacuum
+- Battery level
+- Cleaning time
+- Cleaned area
+- Suction power
+- Water level
+- Cleaning mode
+- Installed box type
+- Error code
+- Firmware version
+- Hardware version
+- Charging status
+- Working status
+- Map availability
+- New map status
+- Mop installation status
+- Remember-map status
+- Repeat-cleaning status
+- Problem status
+
+## Notes
+
+This integration communicates with the vacuum locally over the network.
+
+Support for additional firmware versions, features, and hardware variants is not guaranteed.
+
+## Credits
+
+Original integration by [@tykarol](https://github.com/tykarol/home-assistant-viomi-vacuum-v8).

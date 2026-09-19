@@ -1,9 +1,8 @@
-
 {
-    "name": "Viomi Vacuum V8 (STYJ02YM)",
-    "domains": ["vacuum"],
-    "homeassistant": "2026.8.3",
-    "iot_class": "local_poll",
-    "zip_release": true,
-    "filename": "release.zip"
+  "name": "Viomi Vacuum V8 (STYTJ02YM) / Xiaomi Mi Robot Vacuum-Mop P",
+  "domains": ["vacuum"],
+  "homeassistant": "2026.8.3",
+  "iot_class": "local_poll",
+  "zip_release": true,
+  "filename": "release.zip"
 }
