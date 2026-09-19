@@ -23,11 +23,21 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    ALL_PROPS,
+    BOX_TYPES,
+    CLEANING_MODES,
+    DATA_KEY,
+    DEFAULT_NAME,
+    FAN_SPEEDS,
+    VACUUM_CARD_PROPS_REFERENCES,
+)
+from .coordinator import ViomiDataUpdateCoordinator, async_get_coordinator
+
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Viomi Vacuum V8"
-DOMAIN = "viomi_vacuum_v8"
-DATA_KEY = "viomi_vacuum_v8"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -127,8 +137,6 @@ SERVICE_TO_METHOD = {
     }
 }
 
-FAN_SPEEDS = {"Silent": 0, "Standard": 1, "Medium": 2, "Turbo": 3}
-
 SUPPORT_VIOMI = (
     VacuumEntityFeature.STATE
     | VacuumEntityFeature.PAUSE
@@ -137,7 +145,6 @@ SUPPORT_VIOMI = (
     | VacuumEntityFeature.FAN_SPEED
     | VacuumEntityFeature.LOCATE
     | VacuumEntityFeature.SEND_COMMAND
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.START
 )
 
@@ -152,103 +159,100 @@ STATE_CODE_TO_STATE = {
     7: VacuumActivity.CLEANING,  # Mop only
 }
 
-ALL_PROPS = [
-    "run_state",
-    "mode",
-    "err_state",
-    "battary_life",
-    "box_type",
-    "mop_type",
-    "s_time",
-    "s_area",
-    "suction_grade",
-    "water_grade",
-    "remember_map",
-    "has_map",
-    "is_mop",
-    "has_newmap",
-    "hw_info",
-    "sw_info",
-    "start_time",
-    "order_time",
-    "v_state",
-    "zone_data",
-    "repeat_state",
-    "light_state",
-    "is_charge",
-    "is_work"
-]
-
-VACUUM_CARD_PROPS_REFERENCES = {
-    'cleaned_area': 's_area',
-    'cleaning_time': 's_time'
-}
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass,
+    config,
+    async_add_entities,
+    discovery_info=None,
+):
     """Set up the Viomi Vacuum V8 robot platform."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-
     host = config[CONF_HOST]
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
 
-    # Create handler
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+    coordinator = await async_get_coordinator(
+        hass,
+        host,
+        token,
+        name,
+    )
 
-    vacuum = ViomiVacuum(host, token)
-    device_info = await hass.async_add_executor_job(vacuum.info)
-    device = ViomiVacuumEntity(name, vacuum, device_info.mac_address)
-    hass.data[DATA_KEY][host] = device
+    device = ViomiVacuumEntity(name, coordinator)
 
-    async_add_entities([device], update_before_add=True)
+    coordinator.vacuum_entity = device
+
+    async_add_entities([device], update_before_add=False)
 
     async def async_service_handler(service):
-        """Map services to methods on Viomi Vacuum V8."""
+        """Map custom services to methods on Viomi Vacuum V8."""
         method = SERVICE_TO_METHOD.get(service.service)
-        params = service.data.copy()
-        entity_ids = params.pop(ATTR_ENTITY_ID, hass.data[DATA_KEY].values())
-        update_tasks = []
 
-        for device in filter(
-            lambda x: x.entity_id in entity_ids, hass.data[DATA_KEY].values()
-        ):
+        if method is None:
+            return
+
+        params = service.data.copy()
+        entity_ids = params.pop(ATTR_ENTITY_ID, None)
+
+        for coordinator in hass.data.get(DATA_KEY, {}).values():
+            device = coordinator.vacuum_entity
+
+            if device is None:
+                continue
+
+            if entity_ids and device.entity_id not in entity_ids:
+                continue
+
             if not hasattr(device, method["method"]):
                 continue
-            await getattr(device, method["method"])(**params)
-            update_tasks.append(asyncio.create_task(device.async_update_ha_state(True)))
 
-        if update_tasks:
-            await asyncio.wait(update_tasks)
+            await getattr(device, method["method"])(**params)
+            await coordinator.async_request_refresh()
 
     for vacuum_service in SERVICE_TO_METHOD:
+        if hass.services.has_service(DOMAIN, vacuum_service):
+            continue
+
         schema = SERVICE_TO_METHOD[vacuum_service].get(
-            "schema", VACUUM_SERVICE_SCHEMA
+            "schema",
+            VACUUM_SERVICE_SCHEMA,
         )
+
         hass.services.async_register(
-            DOMAIN, vacuum_service, async_service_handler, schema=schema
+            DOMAIN,
+            vacuum_service,
+            async_service_handler,
+            schema=schema,
         )
 
-
-class ViomiVacuumEntity(StateVacuumEntity):
+class ViomiVacuumEntity(
+    CoordinatorEntity[ViomiDataUpdateCoordinator],
+    StateVacuumEntity,
+):
     """Representation of a Viomi Vacuum V8 robot."""
 
-    def __init__(self, name, vacuum, mac_address):
-        """Initialize the device handler."""
-        self._name = name
-        self._vacuum = vacuum
+def __init__(
+    self,
+    name: str,
+    coordinator: ViomiDataUpdateCoordinator,
+) -> None:
+    """Initialize the device handler."""
+    super().__init__(coordinator)
 
-        self._last_clean_point = None
+    self._name = name
+    self._vacuum = coordinator.vacuum
+    self._last_clean_point = None
 
-        self.vacuum_state = None
-        self._available = False
-
-        self._attr_unique_id = mac_address.replace(":", "").lower()
+    self._attr_unique_id = f"{coordinator.mac_address}_vacuum"
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def vacuum_state(self):
+        """Return the latest vacuum state."""
+        return self.coordinator.data
     
     @property
     def device_info(self) -> DeviceInfo:
@@ -272,12 +276,6 @@ class ViomiVacuumEntity(StateVacuumEntity):
                     self.vacuum_state["run_state"],
                 )
         return None
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the device."""
-        if self.vacuum_state is not None:
-            return self.vacuum_state['battary_life']
 
     @property
     def fan_speed(self):
@@ -432,56 +430,6 @@ class ViomiVacuumEntity(StateVacuumEntity):
             command,
             params,
         )
-        # self.update()
-
-    def update(self):
-        """Fetch state from the device."""
-        try:
-            state = self._vacuum.raw_command('get_prop', ALL_PROPS)
-
-            self.vacuum_state = dict(zip(ALL_PROPS, state))
-
-            for prop in VACUUM_CARD_PROPS_REFERENCES.keys():
-                self.vacuum_state[prop] = self.vacuum_state[VACUUM_CARD_PROPS_REFERENCES[prop]]
-
-            self._available = True
-
-            # Current state of the vacuum
-            # 2: mop only, 1: dust&mop, 0: only vacuum
-            current_mode = int(self.vacuum_state['is_mop'])
-
-            # 3: 2 in 1, 2: water only, 1: dust only, 0: no box
-            box_type = int(self.vacuum_state['box_type'])
-
-            # True: has the mop attachment, False: no attachment
-            has_mop = bool(self.vacuum_state['mop_type'])
-
-            # Automatically set mop based on box_type
-            new_mode = None
-
-            if box_type == 3:
-                # 2 in 1 box
-                if has_mop:
-                    # Vacuum and mop if we have the attachment
-                    new_mode = 1
-                else:
-                    # Just vacuum if we have no mop
-                    new_mode = 0
-            elif box_type == 2:
-                # We only have water, so let's mop.
-                # (Vacuum will error out if we have no mop attachment)
-                new_mode = 2
-            elif box_type == 1:
-                # We only have dust box, mopping not possible
-                new_mode = 0
-
-            if new_mode is not None and new_mode != current_mode:
-                self._vacuum.raw_command('set_mop', [new_mode])
-                self.update()
-        except OSError as exc:
-            _LOGGER.error("Got OSError while fetching the state: %s", exc)
-        except DeviceException as exc:
-            _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
     async def async_clean_zone(self, zone, repeats=1):
         """Clean selected zone for the number of repeats indicated."""
