@@ -165,7 +165,7 @@ async def async_setup_platform(
             "suction_grade",
             lambda value: REVERSE_FAN_SPEEDS.get(value, "Unknown"),
             device_class=SensorDeviceClass.ENUM,
-            options=[*FAN_SPEEDS.values(), "Unknown"],
+            options=[*FAN_SPEEDS.keys(), "Unknown"],
             icon="mdi:fan",
         ),
         ViomiSensor(
@@ -175,7 +175,7 @@ async def async_setup_platform(
             "water_grade",
             lambda value: REVERSE_WATER_LEVELS.get(value, "Unknown"),
             device_class=SensorDeviceClass.ENUM,
-            options=[*WATER_LEVELS.values(), "Unknown"],
+            options=[*WATER_LEVELS.keys(), "Unknown"],
             icon="mdi:water",
         ),
         ViomiSensor(
