@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from homeassistant.helpers.entity import DeviceInfo
 from miio import DeviceException, ViomiVacuum  # pylint: disable=import-error
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
@@ -47,6 +48,21 @@ class ViomiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.hardware_version: str | None = None
         self.model: str | None = None
         self.vacuum_entity = None
+
+    @property
+    def device_identifier(self) -> tuple[str, str]:
+        """Return the stable device identifier."""
+        return (DOMAIN, self.mac_address)
+    
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the vacuum device."""
+        return DeviceInfo(
+            identifiers={self.device_identifier},
+            name=self.name,
+            manufacturer="Viomi",
+            model=self.model or "STYJ02YM",
+        )
 
     def _fetch_state(self) -> dict[str, Any]:
         """Fetch and normalize vacuum state."""

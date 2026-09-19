@@ -102,14 +102,7 @@ class ViomiSensor(
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return DeviceInfo(
-            identifiers={
-                ("viomi_vacuum_v8", self.coordinator.mac_address)
-            },
-            name=self.coordinator.name,
-            manufacturer="Viomi",
-            model="STYJ02YM",
-        )
+        return self.coordinator.device_info
 
 async def async_setup_platform(
     hass,

@@ -258,12 +258,7 @@ class ViomiVacuumEntity(
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.mac_address)},
-            name=self._name,
-            manufacturer="Viomi",
-            model="STYJ02YM",
-        )
+        return self.coordinator.device_info
 
     @property
     def activity(self) -> VacuumActivity | None:

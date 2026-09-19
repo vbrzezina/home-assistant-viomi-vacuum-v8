@@ -63,6 +63,11 @@ class ViomiBinarySensor(
         self._attr_device_class = device_class
 
     @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        return self.coordinator.device_info
+
+    @property
     def is_on(self) -> bool | None:
         """Return whether the sensor is on."""
         if not self.coordinator.data:
@@ -77,18 +82,6 @@ class ViomiBinarySensor(
             return self._transform(value)
 
         return bool(value)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return DeviceInfo(
-            identifiers={
-                ("viomi_vacuum_v8", self.coordinator.mac_address)
-            },
-            name=self.coordinator.name,
-            manufacturer="Viomi",
-            model="STYJ02YM",
-        )
 
 async def async_setup_platform(
     hass,
