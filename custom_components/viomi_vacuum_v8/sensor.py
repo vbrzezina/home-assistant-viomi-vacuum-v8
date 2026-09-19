@@ -134,6 +134,7 @@ async def async_setup_platform(
             "battary_life",
             device_class=SensorDeviceClass.BATTERY,
             unit=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
             icon="mdi:battery",
         ),
         ViomiSensor(
@@ -144,7 +145,6 @@ async def async_setup_platform(
             lambda value: None if value is None else int(value) * 60,
             device_class=SensorDeviceClass.DURATION,
             unit=UnitOfTime.SECONDS,
-            state_class=SensorStateClass.MEASUREMENT,
             icon="mdi:timer-outline",
         ),
         ViomiSensor(
