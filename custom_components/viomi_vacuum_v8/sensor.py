@@ -163,6 +163,7 @@ async def async_setup_platform(
             "Suction Power",
             "suction_grade",
             lambda value: REVERSE_FAN_SPEEDS.get(value, "Unknown"),
+            device_class=SensorDeviceClass.ENUM,
             options=[*FAN_SPEEDS.keys(), "Unknown"],
             icon="mdi:fan",
         ),
@@ -172,6 +173,7 @@ async def async_setup_platform(
             "Water Level",
             "water_grade",
             lambda value: REVERSE_WATER_LEVELS.get(value, "Unknown"),
+            device_class=SensorDeviceClass.ENUM,
             options=[*WATER_LEVELS.keys(), "Unknown"],
             icon="mdi:water",
         ),
@@ -181,6 +183,8 @@ async def async_setup_platform(
             "Cleaning Mode",
             "is_mop",
             lambda value: CLEANING_MODES.get(value, f"Unknown ({value})"),
+            device_class=SensorDeviceClass.ENUM,
+            options=[*CLEANING_MODES.keys(), "Unknown"],
             icon="mdi:robot-vacuum",
         ),
         ViomiSensor(
@@ -189,6 +193,8 @@ async def async_setup_platform(
             "Box Type",
             "box_type",
             lambda value: BOX_TYPES.get(value, f"Unknown ({value})"),
+            device_class=SensorDeviceClass.ENUM,
+            options=[*BOX_TYPES.keys(), "Unknown"],
             icon="mdi:inbox",
         ),
         ViomiSensor(
