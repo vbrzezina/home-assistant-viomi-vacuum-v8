@@ -4,7 +4,7 @@ Home Assistant custom integration for the **Viomi Vacuum V8 (STYTJ02YM)**, also 
 
 Tested with firmware **3.5.3_0017**. Requires Home Assistant **2026.8.0** or newer
 
-> ⚠️ This integration is currently in beta. Other firmware versions and hardware variants may work, but are not currently verified.
+⚠️ This integration is currently in beta. Other firmware versions and hardware variants may work, but are not currently verified.
 
 _Original code by [@tykarol](https://github.com/tykarol/home-assistant-viomi-vacuum-v8) and other contributors._
 
