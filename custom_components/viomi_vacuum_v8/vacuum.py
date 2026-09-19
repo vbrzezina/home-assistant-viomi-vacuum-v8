@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,7 +197,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     vacuum = ViomiVacuum(host, token)
-    device = ViomiVacuumEntity(name, vacuum)
+    device_info = await hass.async_add_executor_job(vacuum.info)
+    device = ViomiVacuumEntity(name, vacuum, device_info.mac_address)
     hass.data[DATA_KEY][host] = device
 
     async_add_entities([device], update_before_add=True)
@@ -231,7 +233,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ViomiVacuumEntity(StateVacuumEntity):
     """Representation of a Viomi Vacuum V8 robot."""
 
-    def __init__(self, name, vacuum):
+    def __init__(self, name, vacuum, mac_address):
         """Initialize the device handler."""
         self._name = name
         self._vacuum = vacuum
@@ -241,10 +243,22 @@ class ViomiVacuumEntity(StateVacuumEntity):
         self.vacuum_state = None
         self._available = False
 
+        self._attr_unique_id = mac_address.replace(":", "").lower()
+
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
+    
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            name=self._name,
+            manufacturer="Viomi",
+            model="STYJ02YM",
+        )
 
     @property
     def activity(self) -> VacuumActivity | None:
