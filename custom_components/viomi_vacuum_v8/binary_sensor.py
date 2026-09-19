@@ -7,6 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -21,7 +22,7 @@ from .coordinator import (
     async_get_coordinator,
 )
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): vol.All(
@@ -31,7 +32,6 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
-
 
 class ViomiBinarySensor(
     CoordinatorEntity[ViomiDataUpdateCoordinator],

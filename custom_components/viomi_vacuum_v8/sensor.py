@@ -7,6 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -35,7 +36,7 @@ from .coordinator import (
     async_get_coordinator,
 )
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): vol.All(
