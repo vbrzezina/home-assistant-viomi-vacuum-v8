@@ -229,21 +229,21 @@ class ViomiVacuumEntity(
     CoordinatorEntity[ViomiDataUpdateCoordinator],
     StateVacuumEntity,
 ):
-    """Representation of a Viomi Vacuum V8 robot."""
+    """Representation of the Viomi Vacuum V8 robot."""
+
     def __init__(
         self,
         name: str,
         coordinator: ViomiDataUpdateCoordinator,
     ) -> None:
+        """Initialize the device handler."""
+        super().__init__(coordinator)
 
-    """Initialize the device handler."""
-    super().__init__(coordinator)
+        self._name = name
+        self._vacuum = coordinator.vacuum
+        self._last_clean_point = None
 
-    self._name = name
-    self._vacuum = coordinator.vacuum
-    self._last_clean_point = None
-
-    self._attr_unique_id = f"{coordinator.mac_address}_vacuum"
+        self._attr_unique_id = f"{coordinator.mac_address}_vacuum"
 
     @property
     def name(self):
