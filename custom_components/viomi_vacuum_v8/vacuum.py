@@ -8,13 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     PLATFORM_SCHEMA,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -146,14 +141,14 @@ SUPPORT_VIOMI = (
 )
 
 STATE_CODE_TO_STATE = {
-    0: STATE_IDLE,
-    1: STATE_IDLE,
-    2: STATE_PAUSED,
-    3: STATE_CLEANING,
-    4: STATE_RETURNING,
-    5: STATE_DOCKED,
-    6: STATE_CLEANING,  # Vacuum & Mop
-    7: STATE_CLEANING   # Mop only
+    0: VacuumActivity.IDLE,
+    1: VacuumActivity.IDLE,
+    2: VacuumActivity.PAUSED,
+    3: VacuumActivity.CLEANING,
+    4: VacuumActivity.RETURNING,
+    5: VacuumActivity.DOCKED,
+    6: VacuumActivity.CLEANING,  # Vacuum & Mop
+    7: VacuumActivity.CLEANING,  # Mop only
 }
 
 ALL_PROPS = [
@@ -252,20 +247,17 @@ class ViomiVacuumEntity(StateVacuumEntity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state."""
+    def activity(self) -> VacuumActivity | None:
+        """Return the current vacuum activity."""
         if self.vacuum_state is not None:
-            # The vacuum reverts back to an idle state after erroring out.
-            # We want to keep returning an error until it has been cleared.
-
             try:
-                return STATE_CODE_TO_STATE[int(self.vacuum_state['run_state'])]
+                return STATE_CODE_TO_STATE[int(self.vacuum_state["run_state"])]
             except KeyError:
                 _LOGGER.error(
-                    "STATE not supported, state_code: %s",
-                    self.vacuum_state['run_state'],
+                    "State not supported, state_code: %s",
+                    self.vacuum_state["run_state"],
                 )
-                return None
+        return None
 
     @property
     def battery_level(self):
