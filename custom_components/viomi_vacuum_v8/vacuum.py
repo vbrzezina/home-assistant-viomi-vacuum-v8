@@ -1,9 +1,11 @@
 """Support for the Viomi Vacuum V8 robot."""
 from functools import partial
+
 import logging
+import asyncio
+import voluptuous as vol
 
 from miio import DeviceException  # pylint: disable=import-error
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -337,20 +339,51 @@ class ViomiVacuumEntity(
         """Locate the vacuum cleaner."""
         await self._try_command("Unable to locate: %s", self._vacuum.raw_command, 'set_resetpos', [1])
 
-    async def async_send_command(self, command, params=None, **kwargs):
-        # Home Assistant templating always returns a string, even if array is outputted, fix this so we can use templating in scripts.
-        if isinstance(params, list) and len(params) == 1 and isinstance(params[0], str):
-            if params[0].find('[') > -1 and params[0].find(']') > -1:
-                params = eval(params[0])
-            elif params[0].isnumeric():
-                params[0] = int(params[0])
+    async def async_send_command(
+        self,
+        command: str,
+        params: list[Any] | None = None,
+    ) -> None:
+        """Send a raw command to the vacuum."""
+        before = await self.hass.async_add_executor_job(
+            self.coordinator.vacuum.raw_command,
+            "get_prop",
+            ["run_state", "mode", "is_work", "is_mop", "box_type", "mop_type", "has_map", "has_newmap"],
+        )
 
-        """Send raw command."""
-        await self._try_command(
-            "Unable to send command to the vacuum: %s",
-            self._vacuum.raw_command,
+        _LOGGER.warning(
+            "Viomi BEFORE %s(%s): %r",
             command,
-            params,
+            params or [],
+            before,
+        )
+
+        result = await self.hass.async_add_executor_job(
+            self.coordinator.vacuum.raw_command,
+            command,
+            params or [],
+        )
+
+        _LOGGER.warning(
+            "Viomi COMMAND %s(%s) returned: %r",
+            command,
+            params or [],
+            result,
+        )
+
+        await asyncio.sleep(3)
+
+        after = await self.hass.async_add_executor_job(
+            self.coordinator.vacuum.raw_command,
+            "get_prop",
+            ["run_state", "mode", "is_work", "is_mop", "box_type", "mop_type", "has_map", "has_newmap"],
+        )
+
+        _LOGGER.warning(
+            "Viomi AFTER %s(%s): %r",
+            command,
+            params or [],
+            after,
         )
 
     async def async_clean_zone(self, zone, repeats=1):
