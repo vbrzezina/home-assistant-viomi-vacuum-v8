@@ -10,7 +10,8 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -143,55 +144,12 @@ async def async_setup_entry(
 ):
     """Set up the Viomi Vacuum V8 vacuum entity."""
     coordinator = entry.runtime_data
-    name = coordinator.name
 
-    device = ViomiVacuumEntity(name, coordinator)
+    device = ViomiVacuumEntity(coordinator.name, coordinator)
 
     coordinator.vacuum_entity = device
 
     async_add_entities([device], update_before_add=False)
-
-    async def async_service_handler(service):
-        """Map custom services to methods on Viomi Vacuum V8."""
-        method = SERVICE_TO_METHOD.get(service.service)
-
-        if method is None:
-            return
-
-        params = service.data.copy()
-        entity_ids = params.pop(ATTR_ENTITY_ID, None)
-
-        for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            coordinator = config_entry.runtime_data
-            device = coordinator.vacuum_entity
-
-            if device is None:
-                continue
-
-            if entity_ids and device.entity_id not in entity_ids:
-                continue
-
-            if not hasattr(device, method["method"]):
-                continue
-
-            await getattr(device, method["method"])(**params)
-            await coordinator.async_request_refresh()
-
-    for vacuum_service in SERVICE_TO_METHOD:
-        if hass.services.has_service(DOMAIN, vacuum_service):
-            continue
-
-        schema = SERVICE_TO_METHOD[vacuum_service].get(
-            "schema",
-            VACUUM_SERVICE_SCHEMA,
-        )
-
-        hass.services.async_register(
-            DOMAIN,
-            vacuum_service,
-            async_service_handler,
-            schema=schema,
-        )
 
 class ViomiVacuumEntity(
     CoordinatorEntity[ViomiDataUpdateCoordinator],
