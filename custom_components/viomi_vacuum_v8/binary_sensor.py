@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DEFAULT_NAME
 from .coordinator import (
@@ -77,6 +78,17 @@ class ViomiBinarySensor(
 
         return bool(value)
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        return DeviceInfo(
+            identifiers={
+                ("viomi_vacuum_v8", self.coordinator.mac_address)
+            },
+            name=self.coordinator.name,
+            manufacturer="Viomi",
+            model="STYJ02YM",
+        )
 
 async def async_setup_platform(
     hass,

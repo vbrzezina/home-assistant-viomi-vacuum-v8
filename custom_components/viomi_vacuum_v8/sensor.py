@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     BOX_TYPES,
@@ -97,6 +98,17 @@ class ViomiSensor(
 
         return value
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        return DeviceInfo(
+            identifiers={
+                ("viomi_vacuum_v8", self.coordinator.mac_address)
+            },
+            name=self.coordinator.name,
+            manufacturer="Viomi",
+            model="STYJ02YM",
+        )
 
 async def async_setup_platform(
     hass,

@@ -31,6 +31,7 @@ from .const import (
     CLEANING_MODES,
     DATA_KEY,
     DEFAULT_NAME,
+    DOMAIN,
     FAN_SPEEDS,
     VACUUM_CARD_PROPS_REFERENCES,
 )
@@ -229,12 +230,12 @@ class ViomiVacuumEntity(
     StateVacuumEntity,
 ):
     """Representation of a Viomi Vacuum V8 robot."""
+    def __init__(
+        self,
+        name: str,
+        coordinator: ViomiDataUpdateCoordinator,
+    ) -> None:
 
-def __init__(
-    self,
-    name: str,
-    coordinator: ViomiDataUpdateCoordinator,
-) -> None:
     """Initialize the device handler."""
     super().__init__(coordinator)
 
@@ -258,7 +259,7 @@ def __init__(
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.coordinator.mac_address)},
             name=self._name,
             manufacturer="Viomi",
             model="STYJ02YM",
@@ -309,7 +310,7 @@ def __init__(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return self.coordinator.last_update_success
 
     @property
     def supported_features(self):
