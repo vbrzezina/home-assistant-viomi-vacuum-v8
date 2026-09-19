@@ -5,46 +5,27 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
     PERCENTAGE,
     UnitOfArea,
     UnitOfTime,
 )
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     BOX_TYPES,
     CLEANING_MODES,
-    DEFAULT_NAME,
     FAN_SPEEDS,
     WATER_LEVELS,
 )
 from .coordinator import (
     ViomiDataUpdateCoordinator,
-    async_get_coordinator,
-)
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(
-            cv.string,
-            vol.Length(min=32, max=32),
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
 )
 
 REVERSE_FAN_SPEEDS = {value: key for key, value in FAN_SPEEDS.items()}
@@ -104,21 +85,14 @@ class ViomiSensor(
         """Return information about the device."""
         return self.coordinator.device_info
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass,
-    config,
+    entry,
     async_add_entities,
-    discovery_info=None,
 ):
     """Set up Viomi sensors."""
-    coordinator = await async_get_coordinator(
-        hass,
-        config[CONF_HOST],
-        config[CONF_TOKEN],
-        config[CONF_NAME],
-    )
-
-    name = config[CONF_NAME]
+    coordinator = entry.runtime_data
+    name = coordinator.name
 
     entities = [
         ViomiSensor(

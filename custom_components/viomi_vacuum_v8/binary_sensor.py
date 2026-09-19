@@ -5,32 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DEFAULT_NAME
 from .coordinator import (
     ViomiDataUpdateCoordinator,
-    async_get_coordinator,
-)
-
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(
-            cv.string,
-            vol.Length(min=32, max=32),
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
 )
 
 class ViomiBinarySensor(
@@ -83,21 +65,14 @@ class ViomiBinarySensor(
 
         return bool(value)
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass,
-    config,
+    entry,
     async_add_entities,
-    discovery_info=None,
 ):
     """Set up Viomi binary sensors."""
-    coordinator = await async_get_coordinator(
-        hass,
-        config[CONF_HOST],
-        config[CONF_TOKEN],
-        config[CONF_NAME],
-    )
-
-    name = config[CONF_NAME]
+    coordinator = entry.runtime_data
+    name = coordinator.name
 
     entities = [
         ViomiBinarySensor(

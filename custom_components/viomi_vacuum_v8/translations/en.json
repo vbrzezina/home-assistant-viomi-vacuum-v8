@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Viomi Vacuum V8",
+        "description": "Enter the connection details for your Viomi Vacuum V8.",
+        "data": {
+          "host": "Host",
+          "token": "Token",
+          "name": "Name"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your vacuum.",
+          "token": "The 32-character token used to connect to your vacuum.",
+          "name": "An optional name for the vacuum."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the vacuum. Check the host and token."
+    },
+    "abort": {
+      "already_configured": "This vacuum is already configured."
+    }
+  }
+}

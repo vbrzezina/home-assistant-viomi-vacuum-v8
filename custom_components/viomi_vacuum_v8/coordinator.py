@@ -6,9 +6,10 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from homeassistant.helpers.entity import DeviceInfo
 from miio import DeviceException, ViomiVacuum  # pylint: disable=import-error
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -16,7 +17,9 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ALL_PROPS,
-    DATA_KEY,
+    CONF_HOST,
+    CONF_TOKEN,
+    DOMAIN,
     VACUUM_CARD_PROPS_REFERENCES,
 )
 
@@ -29,40 +32,45 @@ class ViomiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        vacuum: ViomiVacuum,
-        name: str,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
+        host = entry.data[CONF_HOST]
+        token = entry.data[CONF_TOKEN]
+
         super().__init__(
             hass,
             _LOGGER,
-            name=name,
+            name=entry.title,
+            config_entry=entry,
             update_interval=timedelta(seconds=20),
             always_update=False,
         )
 
-        self.vacuum = vacuum
-        self.name = name
+        self.vacuum = ViomiVacuum(host, token)
+        self.name = entry.title
         self.mac_address: str | None = None
         self.firmware_version: str | None = None
         self.hardware_version: str | None = None
         self.model: str | None = None
         self.vacuum_entity = None
 
-    @property
-    def device_identifier(self) -> tuple[str, str]:
-        """Return the stable device identifier."""
-        return (DOMAIN, self.mac_address)
-    
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the vacuum device."""
-        return DeviceInfo(
-            identifiers={self.device_identifier},
-            name=self.name,
-            manufacturer="Viomi",
-            model=self.model or "STYJ02YM",
-        )
+    async def _async_setup(self) -> None:
+        """Fetch static information from the vacuum."""
+        try:
+            info = await self.hass.async_add_executor_job(self.vacuum.info)
+        except (OSError, DeviceException) as err:
+            raise UpdateFailed(
+                f"Unable to connect to Viomi vacuum: {err}"
+            ) from err
+
+        if not info.mac_address:
+            raise UpdateFailed("Viomi vacuum did not report a MAC address")
+
+        self.mac_address = info.mac_address.lower()
+        self.firmware_version = info.firmware_version
+        self.hardware_version = info.hardware_version
+        self.model = info.model
 
     def _fetch_state(self) -> dict[str, Any]:
         """Fetch and normalize vacuum state."""
@@ -113,42 +121,19 @@ class ViomiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.hass.async_add_executor_job(self._update)
         except (OSError, DeviceException) as err:
-            raise UpdateFailed(f"Unable to update Viomi vacuum: {err}") from err
+            raise UpdateFailed(
+                f"Unable to update Viomi vacuum: {err}"
+            ) from err
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the vacuum device."""
+        if self.mac_address is None:
+            raise RuntimeError("Viomi vacuum MAC address is not available")
 
-async def async_get_coordinator(
-    hass: HomeAssistant,
-    host: str,
-    token: str,
-    name: str,
-) -> ViomiDataUpdateCoordinator:
-    """Return the shared coordinator for a vacuum."""
-    coordinators = hass.data.setdefault(DATA_KEY, {})
-
-    if host in coordinators:
-        return coordinators[host]
-
-    _LOGGER.info("Initializing Viomi vacuum at %s", host)
-
-    vacuum = ViomiVacuum(host, token)
-
-    # We use the device MAC as the stable entity identifier.
-    info = await hass.async_add_executor_job(vacuum.info)
-
-    if not info.mac_address:
-        raise DeviceException("Viomi vacuum did not report a MAC address")
-
-    coordinator = ViomiDataUpdateCoordinator(hass, vacuum, name)
-
-    coordinator.mac_address = info.mac_address.lower()
-    coordinator.firmware_version = info.firmware_version
-    coordinator.hardware_version = info.hardware_version
-    coordinator.model = info.model
-
-    coordinators[host] = coordinator
-
-    # Initial update. Unlike async_config_entry_first_refresh(), this is
-    # appropriate while this release still uses YAML platforms.
-    await coordinator.async_refresh()
-
-    return coordinator
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.mac_address)},
+            name=self.name,
+            manufacturer="Viomi",
+            model=self.model or "STYJ02YM",
+        )

@@ -1,53 +1,29 @@
 """Support for the Viomi Vacuum V8 robot."""
-import asyncio
 from functools import partial
 import logging
 
-from miio import DeviceException, ViomiVacuum  # pylint: disable=import-error
+from miio import DeviceException  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    PLATFORM_SCHEMA,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
-    STATE_OFF,
-    STATE_ON,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
-
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ALL_PROPS,
     BOX_TYPES,
     CLEANING_MODES,
-    DATA_KEY,
-    DEFAULT_NAME,
     DOMAIN,
     FAN_SPEEDS,
     VACUUM_CARD_PROPS_REFERENCES,
 )
-from .coordinator import ViomiDataUpdateCoordinator, async_get_coordinator
+from .coordinator import ViomiDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 SERVICE_CLEAN_ZONE = "clean_zone"
 SERVICE_CLEAN_AREA = "clean_area"
@@ -160,23 +136,14 @@ STATE_CODE_TO_STATE = {
     7: VacuumActivity.CLEANING,  # Mop only
 }
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass,
-    config,
+    entry,
     async_add_entities,
-    discovery_info=None,
 ):
-    """Set up the Viomi Vacuum V8 robot platform."""
-    host = config[CONF_HOST]
-    token = config[CONF_TOKEN]
-    name = config[CONF_NAME]
-
-    coordinator = await async_get_coordinator(
-        hass,
-        host,
-        token,
-        name,
-    )
+    """Set up the Viomi Vacuum V8 vacuum entity."""
+    coordinator = entry.runtime_data
+    name = coordinator.name
 
     device = ViomiVacuumEntity(name, coordinator)
 
@@ -194,7 +161,8 @@ async def async_setup_platform(
         params = service.data.copy()
         entity_ids = params.pop(ATTR_ENTITY_ID, None)
 
-        for coordinator in hass.data.get(DATA_KEY, {}).values():
+        for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            coordinator = config_entry.runtime_data
             device = coordinator.vacuum_entity
 
             if device is None:
