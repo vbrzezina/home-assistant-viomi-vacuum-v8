@@ -85,36 +85,7 @@ class ViomiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _update(self) -> dict[str, Any]:
         """Fetch state and keep the mop mode synchronized with the installed bin."""
-        data = self._fetch_state()
-
-        current_mode = int(data["is_mop"])
-        box_type = int(data["box_type"])
-        has_mop = bool(data["mop_type"])
-
-        new_mode = None
-
-        # 3 = 2-in-1 box
-        if box_type == 3:
-            if has_mop:
-                new_mode = 1
-            else:
-                new_mode = 0
-
-        # 2 = water-only box
-        elif box_type == 2:
-            new_mode = 2
-
-        # 1 = dust-only box
-        elif box_type == 1:
-            new_mode = 0
-
-        if new_mode is not None and new_mode != current_mode:
-            self.vacuum.raw_command("set_mop", [new_mode])
-
-            # Fetch the state again so the entities see the actual mode.
-            data = self._fetch_state()
-
-        return data
+        return self._fetch_state()
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the vacuum."""

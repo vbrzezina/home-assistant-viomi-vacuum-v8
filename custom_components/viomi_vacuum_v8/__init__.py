@@ -12,6 +12,7 @@ PLATFORMS = [
     Platform.VACUUM,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.SELECT,
 ]
 
 type ViomiConfigEntry = ConfigEntry[ViomiDataUpdateCoordinator]

@@ -20,17 +20,13 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     BOX_TYPES,
-    CLEANING_MODES,
     FAN_SPEEDS,
-    WATER_LEVELS,
 )
 from .coordinator import (
     ViomiDataUpdateCoordinator,
 )
 
 REVERSE_FAN_SPEEDS = {value: key for key, value in FAN_SPEEDS.items()}
-REVERSE_WATER_LEVELS = {value: key for key, value in WATER_LEVELS.items()}
-
 
 class ViomiSensor(
     CoordinatorEntity[ViomiDataUpdateCoordinator],
@@ -138,27 +134,7 @@ async def async_setup_entry(
         ViomiSensor(
             coordinator,
             name,
-            "Water Level",
-            "water_grade",
-            lambda value: REVERSE_WATER_LEVELS.get(value, "Unknown"),
-            device_class=SensorDeviceClass.ENUM,
-            options=[*WATER_LEVELS.keys(), "Unknown"],
-            icon="mdi:water",
-        ),
-        ViomiSensor(
-            coordinator,
-            name,
-            "Cleaning Mode",
-            "is_mop",
-            lambda value: CLEANING_MODES.get(value, "Unknown"),
-            device_class=SensorDeviceClass.ENUM,
-            options=[*CLEANING_MODES.values(), "Unknown"],
-            icon="mdi:robot-vacuum",
-        ),
-        ViomiSensor(
-            coordinator,
-            name,
-            "Box Type",
+            "Installed Box",
             "box_type",
             lambda value: BOX_TYPES.get(value, "Unknown"),
             device_class=SensorDeviceClass.ENUM,
