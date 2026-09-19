@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.components.select import SelectEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BOX_TYPES, CLEANING_MODES, WATER_LEVELS
+from .const import CLEANING_MODES, WATER_LEVELS
 from .coordinator import ViomiDataUpdateCoordinator
 
 
@@ -17,6 +17,7 @@ class ViomiCleaningModeSelect(
 
     _attr_icon = "mdi:vacuum"
     _attr_name = "Cleaning Mode"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -25,6 +26,7 @@ class ViomiCleaningModeSelect(
         """Initialize the cleaning mode select."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac_address}_cleaning_mode"
+        self._attr_device_info = coordinator.device_info
 
     @property
     def options(self) -> list[str]:
@@ -100,6 +102,7 @@ class ViomiWaterLevelSelect(
 
     _attr_icon = "mdi:water"
     _attr_name = "Water Level"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -108,6 +111,7 @@ class ViomiWaterLevelSelect(
         """Initialize the water level select."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.mac_address}_water_level"
+        self._attr_device_info = coordinator.device_info
 
     @property
     def available(self) -> bool:

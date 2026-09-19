@@ -17,7 +17,6 @@ PLATFORMS = [
 
 type ViomiConfigEntry = ConfigEntry[ViomiDataUpdateCoordinator]
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ViomiConfigEntry,

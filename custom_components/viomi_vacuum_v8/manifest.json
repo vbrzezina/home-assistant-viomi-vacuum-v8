@@ -1,7 +1,7 @@
 {
   "domain": "viomi_vacuum_v8",
   "name": "Viomi Vacuum V8 (STYTJ02YM) / Xiaomi Mi Robot Vacuum-Mop P",
-  "version": "1.1.0",
+  "version": "1.2.0-beta.2",
   "documentation": "https://github.com/vbrzezina/home-assistant-viomi-vacuum-v8",
   "requirements": [
     "construct>=2.10.59",
